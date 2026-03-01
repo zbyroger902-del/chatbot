@@ -1,53 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
-import { type RegisterActionState, register } from "../actions";
 
-export default function Page() {
-  const router = useRouter();
+const REGISTER_ACTION = "/api/auth/register?redirectUrl=/";
 
-  const [email, setEmail] = useState("");
-  const [isSuccessful, setIsSuccessful] = useState(false);
+function RegisterContent() {
+  const searchParams = useSearchParams();
 
-  const [state, formAction] = useActionState<RegisterActionState, FormData>(
-    register,
-    {
-      status: "idle",
-    }
-  );
-
-  const { update: updateSession } = useSession();
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
-    if (state.status === "user_exists") {
+    const error = searchParams.get("error");
+    if (error === "user_exists") {
       toast({ type: "error", description: "Account already exists!" });
-    } else if (state.status === "failed") {
+    } else if (error === "failed") {
       toast({ type: "error", description: "Failed to create account!" });
-    } else if (state.status === "invalid_data") {
+    } else if (error === "invalid_data") {
       toast({
         type: "error",
         description: "Failed validating your submission!",
       });
-    } else if (state.status === "success") {
-      toast({ type: "success", description: "Account created successfully!" });
-
-      setIsSuccessful(true);
-      updateSession();
-      router.refresh();
     }
-  }, [state.status]);
-
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get("email") as string);
-    formAction(formData);
-  };
+  }, [searchParams]);
 
   return (
     <div className="flex h-dvh w-screen items-start justify-center bg-background pt-12 md:items-center md:pt-0">
@@ -58,8 +36,8 @@ export default function Page() {
             Create an account with your email and password
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+        <AuthForm action={REGISTER_ACTION} defaultEmail="">
+          <SubmitButton isSuccessful={false}>Sign Up</SubmitButton>
           <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
             {"Already have an account? "}
             <Link
@@ -73,5 +51,19 @@ export default function Page() {
         </AuthForm>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-dvh w-screen items-center justify-center bg-background">
+          <div className="size-8 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent" />
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

@@ -1,89 +1,99 @@
-import NextAuth, { type DefaultSession, type Session } from "next-auth";
-import type { DefaultJWT } from "next-auth/jwt";
-import Credentials from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import * as jose from "jose";
 
 export type UserType = "guest" | "regular";
 
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      type: UserType;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    id?: string;
+export type Session = {
+  user: {
+    id: string;
     email?: string | null;
     type: UserType;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT extends DefaultJWT {
-    id: string;
-    type: UserType;
-  }
-}
-
-/** Mock user for detached frontend (no DB). Replace with real providers when connecting your backend. */
-const MOCK_USER = {
-  id: "local-user",
-  email: "local@localhost",
-  type: "guest" as UserType,
+    name?: string | null;
+    image?: string | null;
+  };
+  expires: string;
 };
 
-/** Session fallback when no cookie: chat always has a user so login is not required. */
+export type User = {
+  id?: string;
+  email?: string | null;
+  type: UserType;
+};
+
+const COOKIE_NAME = "auth_token";
+const MOCK_USER: Session["user"] = {
+  id: "local-user",
+  email: "local@localhost",
+  type: "guest",
+};
+
 const MOCK_SESSION: Session = {
   user: { ...MOCK_USER },
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
-/** Use in chat routes/layout so unauthenticated requests get mock session; no sign-in required. */
-export async function getSession() {
-  const session = await auth();
-  return session ?? MOCK_SESSION;
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    return new Uint8Array(0);
+  }
+  return new TextEncoder().encode(secret);
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
-  ...authConfig,
-  providers: [
-    Credentials({
-      id: "guest",
-      credentials: {},
-      async authorize() {
-        return MOCK_USER;
-      },
-    }),
-    Credentials({
-      credentials: {},
-      async authorize() {
-        return MOCK_USER;
-      },
-    }),
-  ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.type = user.type;
-      }
+export async function getSession(): Promise<Session> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) {
+    return MOCK_SESSION;
+  }
+  const secret = getJwtSecret();
+  if (secret.length === 0) {
+    return MOCK_SESSION;
+  }
+  try {
+    const { payload } = await jose.jwtVerify(token, secret);
+    const sub = payload.sub ?? "local-user";
+    const email = (payload.email as string) ?? "local@localhost";
+    const type = (payload.type as UserType) ?? "guest";
+    const exp = payload.exp ?? Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+    return {
+      user: { id: sub, email, type, name: null, image: null },
+      expires: new Date(exp * 1000).toISOString(),
+    };
+  } catch {
+    return MOCK_SESSION;
+  }
+}
 
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.type = token.type;
-      }
+type SignInOptions = {
+  redirect?: boolean;
+  redirectTo?: string;
+  callbackUrl?: string;
+  email?: string;
+  password?: string;
+};
 
-      return session;
-    },
-  },
-});
+export function signIn(
+  provider: string,
+  options?: SignInOptions
+): never {
+  if (provider === "guest") {
+    const url = `/api/auth/guest?redirectUrl=${encodeURIComponent(options?.redirectTo ?? options?.callbackUrl ?? "/")}`;
+    redirect(url);
+  }
+  if (provider === "credentials") {
+    redirect(options?.callbackUrl ?? "/login");
+  }
+  redirect("/login");
+}
+
+type SignOutOptions = {
+  redirectTo?: string;
+  callbackUrl?: string;
+};
+
+export function signOut(options?: SignOutOptions): never {
+  const callbackUrl = options?.redirectTo ?? options?.callbackUrl ?? "/login";
+  redirect(`/api/auth/signout?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+}

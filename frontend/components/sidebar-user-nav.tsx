@@ -3,8 +3,8 @@
 import { ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { User } from "next-auth";
-import { signOut, useSession } from "next-auth/react";
+import type { User } from "@/app/(auth)/auth";
+import { useSession } from "@/components/session-provider";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -24,10 +24,12 @@ import { toast } from "./toast";
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
-  const { data, status } = useSession();
+  const { data, status, signOut } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const isGuest = guestRegex.test(data?.user?.email ?? "");
+  const email = data?.user?.email ?? "";
+  const isGuest =
+    email === "guest@localhost" || guestRegex.test(email);
 
   return (
     <SidebarMenu>
@@ -97,9 +99,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   if (isGuest) {
                     router.push("/login");
                   } else {
-                    signOut({
-                      redirectTo: "/",
-                    });
+                    signOut({ redirectTo: "/" });
                   }
                 }}
                 type="button"

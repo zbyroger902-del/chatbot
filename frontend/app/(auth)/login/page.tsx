@@ -1,53 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
-import { type LoginActionState, login } from "../actions";
 
-export default function Page() {
-  const router = useRouter();
+const LOGIN_ACTION = "/api/auth/callback/login?redirectUrl=/";
 
-  const [email, setEmail] = useState("");
-  const [isSuccessful, setIsSuccessful] = useState(false);
+function LoginContent() {
+  const searchParams = useSearchParams();
 
-  const [state, formAction] = useActionState<LoginActionState, FormData>(
-    login,
-    {
-      status: "idle",
-    }
-  );
-
-  const { update: updateSession } = useSession();
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
-    if (state.status === "failed") {
-      toast({
-        type: "error",
-        description: "Invalid credentials!",
-      });
-    } else if (state.status === "invalid_data") {
+    const error = searchParams.get("error");
+    if (error === "invalid_credentials") {
+      toast({ type: "error", description: "Invalid credentials!" });
+    } else if (error === "invalid_data") {
       toast({
         type: "error",
         description: "Failed validating your submission!",
       });
-    } else if (state.status === "success") {
-      setIsSuccessful(true);
-      updateSession();
-      router.refresh();
     }
-  }, [state.status]);
-
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get("email") as string);
-    formAction(formData);
-  };
+  }, [searchParams]);
 
   return (
     <div className="flex h-dvh w-screen items-start justify-center bg-background pt-12 md:items-center md:pt-0">
@@ -58,8 +34,8 @@ export default function Page() {
             Use your email and password to sign in
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+        <AuthForm action={LOGIN_ACTION} defaultEmail="">
+          <SubmitButton isSuccessful={false}>Sign in</SubmitButton>
           <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
             {"Don't have an account? "}
             <Link
@@ -73,5 +49,19 @@ export default function Page() {
         </AuthForm>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-dvh w-screen items-center justify-center bg-background">
+          <div className="size-8 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
