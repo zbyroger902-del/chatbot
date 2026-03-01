@@ -21,21 +21,20 @@ Full-stack conversational AI app: Next.js chat UI with an agentic Python backend
 
 ```
 chatbot/
-├── frontend/          # Next.js app (app, components, lib, hooks, etc.)
+├── frontend/          # Next.js app (app, components, lib, hooks, etc.); only node_modules lives here
 ├── backend/           # FastAPI + LangGraph Python service
 ├── .github/           # CI workflows
-├── package.json       # Root scripts (dev, build, lint, test, db:*)
-├── pnpm-workspace.yaml
+├── package.json       # Root scripts run commands in frontend/
 └── README.md
 ```
 
-All frontend code lives under `frontend/`. Root `package.json` delegates to the frontend package so you can still run `pnpm dev`, `pnpm build`, etc. from the repo root.
+All frontend code and dependencies live under `frontend/`. Root `package.json` scripts run commands inside `frontend/` (e.g. `pnpm dev`, `pnpm build` from root), so you still run everything from the repo root. The only `node_modules` is `frontend/node_modules/`.
 
 ## Usage
 
 ### Frontend (Next.js)
 
-From the project root:
+From the project root, `pnpm install` runs the install script and installs frontend dependencies (into `frontend/node_modules/`). You can also run `cd frontend && pnpm install` directly.
 
 ```bash
 pnpm install
@@ -71,7 +70,7 @@ See `backend/README.md` for backend-only setup details (e.g. Aliyun mirror).
 
 ## Build and CI
 
-- **Build**: `pnpm build` (uses webpack; Turbopack is used only for `pnpm dev` in the frontend package).
+- **Build**: `pnpm build` (uses webpack; Turbopack is used only for `pnpm dev` in the frontend app).
 - **Lint**: `pnpm lint`
 - **Tests**: `pnpm test` (Playwright e2e; runs from root and targets the frontend app).
 

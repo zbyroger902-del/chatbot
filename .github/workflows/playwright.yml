@@ -49,7 +49,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: cd frontend && pnpm install --frozen-lockfile
 
       - name: Cache Playwright browsers
         uses: actions/cache@v3
@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter frontend exec playwright install --with-deps chromium
+        run: cd frontend && pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
         run: pnpm test

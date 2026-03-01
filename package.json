@@ -2,19 +2,20 @@
   "name": "chatbot",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter frontend dev",
-    "build": "pnpm --filter frontend build",
-    "start": "pnpm --filter frontend start",
-    "lint": "pnpm --filter frontend lint",
-    "format": "pnpm --filter frontend format",
-    "db:generate": "pnpm --filter frontend db:generate",
-    "db:migrate": "pnpm --filter frontend db:migrate",
-    "db:studio": "pnpm --filter frontend db:studio",
-    "db:push": "pnpm --filter frontend db:push",
-    "db:pull": "pnpm --filter frontend db:pull",
-    "db:check": "pnpm --filter frontend db:check",
-    "db:up": "pnpm --filter frontend db:up",
-    "test": "pnpm --filter frontend test"
+    "install": "cd frontend && pnpm install",
+    "dev": "cd frontend && pnpm run dev",
+    "build": "cd frontend && pnpm run build",
+    "start": "cd frontend && pnpm run start",
+    "lint": "cd frontend && pnpm run lint",
+    "format": "cd frontend && pnpm run format",
+    "db:generate": "cd frontend && pnpm run db:generate",
+    "db:migrate": "cd frontend && pnpm run db:migrate",
+    "db:studio": "cd frontend && pnpm run db:studio",
+    "db:push": "cd frontend && pnpm run db:push",
+    "db:pull": "cd frontend && pnpm run db:pull",
+    "db:check": "cd frontend && pnpm run db:check",
+    "db:up": "cd frontend && pnpm run db:up",
+    "test": "cd frontend && pnpm run test"
   },
   "packageManager": "pnpm@9.12.3"
 }
