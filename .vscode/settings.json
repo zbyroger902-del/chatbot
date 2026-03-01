@@ -24,7 +24,7 @@
   "[graphql]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "emmet.showExpandedAbbreviation": "never",

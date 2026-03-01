@@ -13,21 +13,18 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    },
-    "strictNullChecks": true
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] },
+    "strictNullChecks": true,
+    "typeRoots": ["node_modules/@types"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "next.config.ts",
     "next.config.js",
     ".next/dev/types/**/*.ts"
   ],
