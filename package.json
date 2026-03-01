@@ -1,0 +1,20 @@
+{
+  "name": "chatbot",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter frontend dev",
+    "build": "pnpm --filter frontend build",
+    "start": "pnpm --filter frontend start",
+    "lint": "pnpm --filter frontend lint",
+    "format": "pnpm --filter frontend format",
+    "db:generate": "pnpm --filter frontend db:generate",
+    "db:migrate": "pnpm --filter frontend db:migrate",
+    "db:studio": "pnpm --filter frontend db:studio",
+    "db:push": "pnpm --filter frontend db:push",
+    "db:pull": "pnpm --filter frontend db:pull",
+    "db:check": "pnpm --filter frontend db:check",
+    "db:up": "pnpm --filter frontend db:up",
+    "test": "pnpm --filter frontend test"
+  },
+  "packageManager": "pnpm@9.12.3"
+}
