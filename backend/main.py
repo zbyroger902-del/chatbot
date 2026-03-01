@@ -1,13 +1,21 @@
 """
 FastAPI app for the chatbot backend. LangGraph agent is used for chat.
 """
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent.graph import run_agent
+from auth import auth_router
 
 app = FastAPI(title="Chatbot Backend")
+
+if not os.getenv("JWT_SECRET") and os.getenv("ENV", "development") != "development":
+    raise ValueError("JWT_SECRET must be set in non-development environments")
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 app.add_middleware(
     CORSMiddleware,
