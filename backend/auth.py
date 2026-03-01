@@ -1,13 +1,19 @@
 """
-JWT-based auth: create/verify tokens, login (guest + credentials stub).
+JWT-based auth: create/verify tokens, login (guest + credentials).
 """
 import os
 import time
 from typing import Literal
 
+import bcrypt
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import get_db
+from models import User
 
 UserType = Literal["guest", "regular"]
 
@@ -69,11 +75,11 @@ auth_router = APIRouter()
 
 
 @auth_router.post("/login")
-def login(request: LoginRequest):
+async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """
     POST /auth/login
     Body: { "guest": true } OR { "email": str, "password": str }.
-    Guest returns a JWT; credentials return 401 until backend user store exists.
+    Email field is treated as email or username (e.g. "admin").
     """
     if request.guest is True:
         user_id = f"guest-{int(time.time() * 1000)}"
@@ -85,7 +91,31 @@ def login(request: LoginRequest):
         return {"token": token}
 
     if request.email and request.password:
-        # Stub: no backend user store in v1; frontend will fall back to its DB
-        raise HTTPException(status_code=401, detail="Credentials not supported yet")
+        if "@" in request.email:
+            result = await db.execute(
+                select(User).where(User.email == request.email)
+            )
+        else:
+            result = await db.execute(
+                select(User).where(User.username == request.email)
+            )
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if not bcrypt.checkpw(
+            request.password.encode("utf-8"),
+            user.password_hash.encode("ascii"),
+        ):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        email_for_token = user.email or user.username
+        token = create_token(
+            user_id=str(user.id),
+            email=email_for_token,
+            user_type="regular",
+        )
+        return {"token": token}
 
-    raise HTTPException(status_code=400, detail="Provide { guest: true } or { email, password }")
+    raise HTTPException(
+        status_code=400,
+        detail="Provide { guest: true } or { email, password }",
+    )

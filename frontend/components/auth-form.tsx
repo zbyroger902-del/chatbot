@@ -23,19 +23,19 @@ export function AuthForm({
           className="font-normal text-zinc-600 dark:text-zinc-400"
           htmlFor="email"
         >
-          Email Address
+          Email or username
         </Label>
 
         <Input
-          autoComplete="email"
+          autoComplete="username"
           autoFocus
           className="bg-muted text-md md:text-sm"
           defaultValue={defaultEmail}
           id="email"
           name="email"
-          placeholder="user@acme.com"
+          placeholder="admin or user@acme.com"
           required
-          type="email"
+          type="text"
         />
       </div>
 
@@ -67,19 +67,19 @@ export function AuthForm({
           className="font-normal text-zinc-600 dark:text-zinc-400"
           htmlFor="email"
         >
-          Email Address
+          Email or username
         </Label>
 
         <Input
-          autoComplete="email"
+          autoComplete="username"
           autoFocus
           className="bg-muted text-md md:text-sm"
           defaultValue={defaultEmail}
           id="email"
           name="email"
-          placeholder="user@acme.com"
+          placeholder="admin or user@acme.com"
           required
-          type="email"
+          type="text"
         />
       </div>
 

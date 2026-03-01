@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider } from "@/components/session-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),

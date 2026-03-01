@@ -55,11 +55,14 @@ pnpm dev
 
 ### Backend (FastAPI + LangGraph)
 
+Start the database first (see [Database (Docker)](#database-docker) below), then:
+
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+# Set DATABASE_URL (e.g. export DATABASE_URL=postgresql+asyncpg://chatbot:chatbot@localhost:5433/chatbot)
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -67,6 +70,26 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - Chat: `POST http://localhost:8000/chat` with JSON body `{"message": "..."}` or `{"messages": [...]}`
 
 See `backend/README.md` for backend-only setup details (e.g. Aliyun mirror).
+
+### Database (Docker)
+
+The backend uses PostgreSQL (with pgvector for future vector storage). The container exposes **port 5433** on the host to avoid conflicting with another Postgres (e.g. Dify) on 5432. Run the DB with Docker Desktop:
+
+```bash
+docker compose up -d db
+```
+
+Set backend env in `backend/.env` (or export in the shell). The backend loads `backend/.env` on startup. Copy from `backend/.env.example` and fill in:
+
+```bash
+# backend/.env
+JWT_SECRET=your-secret-at-least-32-chars   # e.g. openssl rand -base64 32
+DATABASE_URL=postgresql+asyncpg://chatbot:chatbot@localhost:5433/chatbot
+```
+
+**Schema, tables, and default user:** When the backend starts, it creates the schema and tables (from [backend/models.py](backend/models.py)) and seeds a default user if missing. This happens in the FastAPI lifespan in [backend/main.py](backend/main.py) (create_all + admin seed). No separate migration or seed step is required.
+
+Default login credentials (seeded on first backend startup): **admin** / **password**. Use these in the frontend login (email-or-username field: `admin`, password: `password`).
 
 ## Build and CI
 
